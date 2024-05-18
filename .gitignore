@@ -1,0 +1,6 @@
+# Maven artifacts
+/target/
+
+# IDEA artifacts and output dirs
+*.iml
+.idea

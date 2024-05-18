@@ -1,9 +1,14 @@
 package edu.uoc.epcsd.notification.services;
 
 import edu.uoc.epcsd.notification.kafka.ProductMessage;
+import edu.uoc.epcsd.notification.rest.dtos.GetUserResponse;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.LocalDate;
 
 @Log4j2
 @Component
@@ -13,9 +18,25 @@ public class NotificationService {
     private String userServiceUrl;
 
     public void notifyProductAvailable(ProductMessage productMessage) {
+        // Reemplazamos los parámetros
+        userServiceUrl = userServiceUrl.replace("{productId}", String.valueOf(productMessage.getProductId()))
+                                       .replace("{availableOnDate}", LocalDate.now().toString());
 
-        // TODO: Use RestTemplate with the above userServiceUrl to query the User microservice in order to get the users that have an alert for the specified product (the date specified in the parameter may be the actual date: LocalDate.now()).
-        //  Then simulate the email notification for the alerted users by logging a line with INFO level for each user saying "Sending an email to user " + the user fullName
+        // Utilizamos RestTemplate para buscar los usuarios que notificar del microservicio User
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<GetUserResponse[]> response = restTemplate.getForEntity(userServiceUrl, GetUserResponse[].class);
 
+        // Comprobamos si hay respuesta
+        if (response.hasBody()) {
+            GetUserResponse[] usersToNotify = response.getBody();
+            assert usersToNotify != null;
+
+            if (usersToNotify.length == 0)
+                log.info("No users to notify");
+            else {
+                for (GetUserResponse user : usersToNotify)
+                    log.info("Sending an email to user {} notifying that product ({}) item is available", user.getFullName(), productMessage.getProductId());
+            }
+        }
     }
 }
