@@ -18,13 +18,8 @@ public class NotificationService {
     private String userServiceUrl;
 
     public void notifyProductAvailable(ProductMessage productMessage) {
-        // Reemplazamos los parámetros
-        userServiceUrl = userServiceUrl.replace("{productId}", String.valueOf(productMessage.getProductId()))
-                                       .replace("{availableOnDate}", LocalDate.now().toString());
-
         // Utilizamos RestTemplate para buscar los usuarios que notificar del microservicio User
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<GetUserResponse[]> response = restTemplate.getForEntity(userServiceUrl, GetUserResponse[].class);
+        ResponseEntity<GetUserResponse[]> response = new RestTemplate().getForEntity(userServiceUrl, GetUserResponse[].class, productMessage.getProductId(), LocalDate.now().toString());
 
         // Comprobamos si hay respuesta
         if (response.hasBody()) {
